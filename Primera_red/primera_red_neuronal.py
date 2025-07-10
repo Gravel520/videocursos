@@ -37,14 +37,25 @@ Finalmente podemos comprobar los valores que utilizó la red neuronal
 
 '''
 
+# Con estas líneas de código desaparecen los mensaje informativos
+#   al usar las librerías Keras y Tensorflow.
+import os
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 import tensorflow as tf
 import numpy as np
 import keras
+import logging
 import matplotlib.pyplot as plt
+from keras.models import model_from_json
+
+# Silenciar logs de TensorFlow
+tf.get_logger().setLevel(logging.ERROR)
 
 # Creamos los arreglos que corresponden a los grados celsius y fahrenheit.
-celsius = np.array([-40, -10, 0, 8, 15, 22, 38], dtype=float)
-fahrenheit = np.array([-40, 14, 32, 46, 59, 72, 100], dtype=float)
+celsius = np.array([-40, -10, 0, 8, 15, 22, 38, 250, 1000], dtype=float)
+fahrenheit = np.array([-40, 14, 32, 46, 59, 72, 100, 482, 1832], dtype=float)
 
 '''
 # Creamos la red neuronal de tipo 'Densa', con una capa de entrada o
@@ -54,10 +65,10 @@ modelo = keras.Sequential([capa])
 '''
 
 # Creamos la red neuronal de tipo 'Densa', con una capa de entrada, con
-#   una neurona, dos capas intermedias, ocultas, con tres neuronas
+#   una neurona, dos capas intermedias, ocultas, con dieciseis neuronas
 #   cada una, y finalmente una capa de salida con una neurona.
-oculta1 = keras.layers.Dense(units=3, input_shape=[1]) # Capa entrada y oculta1
-oculta2 = keras.layers.Dense(units=3) # Capa oculta2
+oculta1 = keras.layers.Dense(units=16, input_shape=[1]) # Capa entrada y oculta1
+oculta2 = keras.layers.Dense(units=16) # Capa oculta2
 salida = keras.layers.Dense(units=1) # Capa salida
 modelo = keras.Sequential([oculta1, oculta2, salida])
 
@@ -69,7 +80,7 @@ modelo.compile(
 
 # Entrenamos el modelo.
 print('Comenzando entrenamiento...')
-historial = modelo.fit(celsius, fahrenheit, epochs=300, verbose=False)
+historial = modelo.fit(celsius, fahrenheit, epochs=1000, verbose=False)
 print('Modelo entrenado!')
 
 # Graficamos la función de perdida del modelo.
@@ -80,11 +91,41 @@ plt.show()
 
 # Hacemos una predicción.
 print('Hagamos una predicción!')
-x = np.array([[100]])
+x = np.array([[250]])
 resultado = modelo.predict(x)
 print(f'El resultado es {str(resultado)} grados fahrenheit')
 
 # Presentamos los valores del sesgo y el peso.
-print('\nVariables internas del modelo')
+#print('\nVariables internas del modelo')
 #print(capa.get_weights())
 
+###### GUARDAR LA RED Y USARLA DESPUÉS ######
+'''
+Lo que hacemos es guardar esa red y en OTRO código la cargaríamos y la
+utilizaríamos comi si fuese una librería o una función que creamos,
+pasándole entradas y obteniendo las predicciones.
+'''
+'''
+# Serializar el modelo a JSON
+model_json_celsius = modelo.to_json()
+with open('modelo_celsius.json', 'w') as json_file:
+    json_file.write(model_json_celsius)
+
+# Serializar los pesos a HDF5
+modelo.save_weights('modelo_celsius.weights.h5')
+print('Modelo guardado!')
+'''
+# Guardarlo en formato .keras
+'''
+El formato oficial recomendado desde TensorFlow 2.13 en adelante.
+Guarda todo: arquitectura, pesos, configuración de entrenamiento, etc.
+Guarda todo en un solo archivo.
+Muy simple de usar.
+Compatible con futuras versiones de Keras.
+
+Para cargarlo después:
+from keras.models import load_model
+modelo_cargado = load_model('mi_modelo.keras')
+'''
+modelo.save('C:/Users/katal/Documents/Python/Videocursos/Primera_red/modelo_celsius_keras.keras')
+print('Modelo guardado en formato .keras.')
