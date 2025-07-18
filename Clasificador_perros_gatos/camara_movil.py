@@ -31,7 +31,7 @@ def callback():
     else:
         onClossing()
 
-url = 'https://192.168.0.13:4343/video'
+url = 'http://192.168.0.21:4747/video'
 cap = cv2.VideoCapture(url)
 
 if cap.isOpened():
